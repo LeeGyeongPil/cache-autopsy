@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cache-autopsy"
+version = "0.1.0"
+description = "Find out why your LLM prompt cache missed: offline diff, usage-aware hit rate, missed cost and CI gates for Anthropic and OpenAI request logs."
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.12"
+dependencies = []
+keywords = ["llm", "prompt-caching", "anthropic", "openai", "cli", "ci"]
+classifiers = [
+  "Environment :: Console",
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python :: 3",
+  "Topic :: Software Development :: Quality Assurance",
+]
+
+[project.scripts]
+cache-autopsy = "cache_autopsy.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cache_autopsy"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
