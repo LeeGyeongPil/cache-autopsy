@@ -1,0 +1,23 @@
+# Offline project: no API keys, no network at test time.
+name: ci
+on:
+  push:
+  pull_request:
+  schedule:
+    - cron: "17 3 * * 1"   # weekly: catch breakage from runtime or action changes
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12"]   # versions actually tested locally: 3.12.4 and 3.15.2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv python install ${{ matrix.python-version }}
+      - run: uv sync --locked --python ${{ matrix.python-version }}
+      - run: uv run pytest -q
+      - run: uv run cache-autopsy demo
+      - name: Gate sanity check (the fixed sample must pass, exit code 0)
+        run: uv run cache-autopsy analyze src/cache_autopsy/samples/anthropic_fixed.jsonl --fail-under 0.6 --format md
