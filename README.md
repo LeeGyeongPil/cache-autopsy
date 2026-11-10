@@ -32,7 +32,7 @@ uv sync
 uv run cache-autopsy --version
 ```
 ```text
-cache-autopsy 0.1.0
+cache-autopsy 0.1.1
 ```
 최소 리눅스 컨테이너라면 `git`, `curl`, `ca-certificates` 가 필요합니다. PyPI 에는 아직 게시하지 않았습니다.
 
@@ -90,7 +90,7 @@ Anthropic 의 `input_tokens` 는 마지막 캐시 지점 **뒤** 토큰만 세�
 주요 옵션: `--format text|json|md`, `--fail-under 0.6`(적중률 하한, **0~1 비율**이며 60 처럼 쓰면 종료 2), `--fail-on CODE,...`(해당 판정·원인이 있으면 실패, 모르는 값은 종료 2), `--session-key request.metadata.user_id`(대화 묶음 기준), `--pricing FILE`(단가 덮어쓰기), `--redact`(요청 텍스트를 출력하지 않음), `--provider`(자동 감지 대신 지정), `--min-tokens`(캐시 최소 토큰 수, 기본 1024).
 
 ### 입력 형식
-한 줄에 JSON 객체 하나. `request`(필수), `response`(보통), `session_id`, `ts`(ISO-8601 또는 epoch 초)를 둡니다. 지원: Anthropic Messages, OpenAI Chat Completions, OpenAI Responses.
+한 줄에 JSON 객체 하나(파일 앞의 UTF-8 BOM 은 허용). `request`(필수), `response`(보통), `session_id`, `ts`(ISO-8601 또는 epoch 초)를 둡니다. 지원: Anthropic Messages, OpenAI Chat Completions, OpenAI Responses.
 ```json
 {"session_id": "s1", "provider": "anthropic", "ts": "2026-11-09T10:00:00+00:00",
  "request": {"model": "...", "tools": [], "system": "...", "messages": []},
