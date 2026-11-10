@@ -35,7 +35,7 @@ class Pricing:
     def from_file(cls, path: str | Path) -> "Pricing":
         """Default table with the entries of ``path`` laid over it."""
         try:
-            override = json.loads(Path(path).read_text(encoding="utf-8"))
+            override = json.loads(Path(path).read_text(encoding="utf-8-sig"))
         except FileNotFoundError:
             raise InputFormatError(f"pricing file not found: {path}. Pass an existing JSON file.") from None
         except UnicodeDecodeError:

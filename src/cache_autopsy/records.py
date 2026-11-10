@@ -26,7 +26,7 @@ def read_jsonl(path: str | Path) -> Iterator[dict]:
     """Yield records with a ``_line`` field; blank lines are skipped."""
     p = Path(path)
     try:
-        handle = p.open(encoding="utf-8")
+        handle = p.open(encoding="utf-8-sig")
     except FileNotFoundError:
         raise InputFormatError(f"file not found: {path}. Check the path.") from None
     except OSError as exc:  # directory, permission denied, ...
@@ -63,7 +63,7 @@ def read_jsonl(path: str | Path) -> Iterator[dict]:
 def read_request(path: str | Path) -> dict:
     """Load one request body; a whole record with a "request" key is accepted too."""
     try:
-        data = json.loads(Path(path).read_text(encoding="utf-8"))
+        data = json.loads(Path(path).read_text(encoding="utf-8-sig"))
     except FileNotFoundError:
         raise InputFormatError(f"file not found: {path}. Check the path.") from None
     except UnicodeDecodeError:
