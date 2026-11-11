@@ -1,5 +1,7 @@
 # cache-autopsy
 
+**한국어** | [English](README.en.md)
+
 > **English summary** — cache-autopsy reads your saved LLM request/response logs (JSONL) and tells you, offline, why the prompt cache missed: which request, which JSON path and byte offset diverged, what it cost, and how to fix it. It is for developers calling the Anthropic or OpenAI APIs directly who want to explain a bill or gate prompt changes in CI. Run `uv run cache-autopsy demo` after cloning; no API key, no network, zero dependencies.
 
 프롬프트 캐시가 왜 깨졌는지, 이미 쌓아 둔 요청·응답 기록만으로 알려 주는 오프라인 CLI입니다. 공급자 콘솔을 뒤지거나 두 요청 본문을 눈으로 비교하는 수고를 줄여 줍니다.
