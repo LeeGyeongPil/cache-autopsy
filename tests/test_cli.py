@@ -24,7 +24,11 @@ class CliTest(unittest.TestCase):
     def test_demo(self):  # AC-1
         code, out, _ = run("demo")
         self.assertEqual(code, 0)
-        self.assertIn("연습용 목(mock)", out.splitlines()[0])
+        self.assertIn("practice mock data", out.splitlines()[0])
+        self.assertNotIn("연습용", out)
+        code, ko_out, _ = run("--lang", "ko", "demo")
+        self.assertEqual(code, 0)
+        self.assertIn("연습용 목(mock)", ko_out.splitlines()[0])
         rows = {line.split()[0]: line for line in out.splitlines() if line.startswith(("broken", "fixed"))}
         self.assertEqual(set(rows), {"broken", "fixed"})
         rate = lambda row: float(row.split()[2].rstrip("%"))

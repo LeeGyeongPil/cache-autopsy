@@ -46,7 +46,7 @@ def _num(value: Any, name: str) -> int:
     if value is None:
         return 0
     if not isinstance(value, int) or isinstance(value, bool) or value < 0:
-        raise InputFormatError(f"usage field {name} must be a non-negative integer, got {value!r}")
+        raise InputFormatError.coded("err.usage_int_openai", name=name, value=value)
     return value
 
 
@@ -55,7 +55,7 @@ def _usage(resp: dict, total_key: str, details_key: str) -> Usage | None:
     if u is None:
         return None
     if not isinstance(u, dict):
-        raise InputFormatError("response.usage must be an object")
+        raise InputFormatError.coded("err.usage_not_object")
     total = _num(u.get(total_key), total_key)
     details = u.get(details_key) if isinstance(u.get(details_key), dict) else {}
     # The cached part is already INSIDE the total here (unlike Anthropic).

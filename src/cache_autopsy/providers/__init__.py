@@ -13,9 +13,9 @@ ALIASES = {"openai": None, "claude": "anthropic", "chat": "openai_chat", "respon
 def get_provider(name: str) -> ProviderSpec:
     key = ALIASES.get(name, name)
     if key is None:  # "openai" alone is ambiguous: decide in detect()
-        raise UnknownProviderError("'openai' is ambiguous; use 'openai_chat' or 'openai_responses'.")
+        raise UnknownProviderError.coded("err.provider_ambiguous")
     if key not in PROVIDERS:
-        raise UnknownProviderError(f"unknown provider {name!r}; choose one of: {', '.join(PROVIDERS)}.")
+        raise UnknownProviderError.coded("err.provider_unknown", name=name, choices=", ".join(PROVIDERS))
     return PROVIDERS[key]
 
 
@@ -48,6 +48,4 @@ def detect(request: dict, response: dict | None = None, hint: str | None = None)
         return OPENAI_CHAT
     if "max_tokens" in request and "messages" in request:
         return ANTHROPIC
-    raise UnknownProviderError(
-        "could not detect the provider from this request. Pass provider='anthropic', "
-        "'openai_chat' or 'openai_responses' (CLI: --provider).")
+    raise UnknownProviderError.coded("err.provider_undetected")

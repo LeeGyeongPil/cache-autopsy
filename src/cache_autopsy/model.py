@@ -4,18 +4,51 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any, Callable
 
+from .i18n import localize_detail, t, translate
+
 
 class CacheAutopsyError(Exception):
-    """Base class for errors this package raises on purpose."""
+    """Base class for errors this package raises on purpose.
+
+    ``str(exc)`` is always an English sentence. Errors raised through :meth:`coded` also carry a
+    message ``code`` and ``params`` so the CLI can show the same error in the chosen language.
+    """
+
+    def __init__(self, message: str = "", code: str | None = None, params: dict[str, Any] | None = None):
+        super().__init__(message)
+        self.message = message
+        self.code = code
+        self.params = dict(params or {})
+
+    @classmethod
+    def coded(cls, code: str, **params: Any):
+        """Build the error from message-table key ``code`` (English text in ``str``)."""
+        return cls(translate("en", code, **params), code=code, params=params)
+
+    def localized(self) -> str:
+        """The error text in the current output language (English when it has no code)."""
+        if not self.code:
+            return self.message
+        params = {k: (localize_detail(v) if k in ("reason", "detail") else v) for k, v in self.params.items()}
+        return t(self.code, **params)
 
 
 class InputFormatError(CacheAutopsyError):
     """A record or request has a shape we cannot read. ``line`` is 1-based when known."""
 
-    def __init__(self, message: str, line: int | None = None):
+    def __init__(self, message: str, line: int | None = None, code: str | None = None,
+                 params: dict[str, Any] | None = None):
         self.line = line
         prefix = f"line {line}: " if line else ""
-        super().__init__(prefix + message)
+        super().__init__(message, code, params)
+        self.args = (prefix + message,)
+
+    @classmethod
+    def coded(cls, code: str, line: int | None = None, **params: Any):  # type: ignore[override]
+        return cls(translate("en", code, **params), line, code, params)
+
+    def localized(self) -> str:
+        return (t("err.line_prefix", line=self.line) if self.line else "") + super().localized()
 
 
 class UnknownProviderError(CacheAutopsyError):
@@ -71,9 +104,14 @@ class Finding:
     path: str
     message: str
     fix: str = ""
+    # display-only: message-table key and params so the CLI can show the finding in another language
+    msg_key: str = field(default="", repr=False, compare=False)
+    msg_params: dict[str, Any] = field(default_factory=dict, repr=False, compare=False)
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        d = asdict(self)
+        d.pop("msg_key"), d.pop("msg_params")
+        return d
 
 
 @dataclass

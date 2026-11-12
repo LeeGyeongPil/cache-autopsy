@@ -13,7 +13,7 @@ from .model import (CacheAutopsyError, Divergence, Finding, InputFormatError, Pa
                     UnknownProviderError, Usage)
 from .verdict import analyze_records
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"
 __all__ = [
     "diff_requests", "analyze_records", "lint_request", "Pricing",
     "Divergence", "PairVerdict", "Report", "Finding", "Usage",

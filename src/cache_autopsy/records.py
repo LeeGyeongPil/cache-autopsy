@@ -18,7 +18,7 @@ def parse_ts(value: Any) -> float | None:
     try:
         dt = datetime.fromisoformat(str(value))
     except ValueError:
-        raise InputFormatError(f"ts {value!r} is not an ISO-8601 time or epoch number") from None
+        raise InputFormatError.coded("err.ts_invalid", value=value) from None
     return dt.timestamp() if dt.tzinfo else dt.replace(tzinfo=None).timestamp()
 
 
@@ -28,9 +28,9 @@ def read_jsonl(path: str | Path) -> Iterator[dict]:
     try:
         handle = p.open(encoding="utf-8-sig")
     except FileNotFoundError:
-        raise InputFormatError(f"file not found: {path}. Check the path.") from None
+        raise InputFormatError.coded("err.file_not_found", path=path) from None
     except OSError as exc:  # directory, permission denied, ...
-        raise InputFormatError(f"cannot read {path}: {exc.strerror or exc}. Pass a readable UTF-8 JSONL file.") from None
+        raise InputFormatError.coded("err.cannot_read_log", path=path, reason=exc.strerror or exc) from None
     with handle:
         number = 0
         lines = iter(handle)
@@ -41,21 +41,19 @@ def read_jsonl(path: str | Path) -> Iterator[dict]:
             except StopIteration:
                 return
             except UnicodeDecodeError:
-                raise InputFormatError("not valid UTF-8. Check that the file is UTF-8 JSONL, not binary or another encoding.", number) from None
+                raise InputFormatError.coded("err.log_not_utf8", number) from None
             except OSError as exc:
-                raise InputFormatError(f"cannot read {path}: {exc.strerror or exc}.", number) from None
+                raise InputFormatError.coded("err.cannot_read_midway", number, path=path, reason=exc.strerror or exc) from None
             if not raw.strip():
                 continue
             try:
                 rec = json.loads(raw)
             except json.JSONDecodeError as exc:
-                raise InputFormatError(f"invalid JSON ({exc.msg}). One JSON object per line is expected.", number) from None
+                raise InputFormatError.coded("err.invalid_json_line", number, detail=exc.msg) from None
             if not isinstance(rec, dict) or not isinstance(rec.get("request"), dict):
-                raise InputFormatError(
-                    'each record must be an object with a "request" object '
-                    '(and usually a "response" object).', number)
+                raise InputFormatError.coded("err.record_shape", number)
             if "response" in rec and not isinstance(rec["response"], dict):
-                raise InputFormatError('"response" must be an object.', number)
+                raise InputFormatError.coded("err.response_object", number)
             rec["_line"] = number
             yield rec
 
@@ -65,17 +63,17 @@ def read_request(path: str | Path) -> dict:
     try:
         data = json.loads(Path(path).read_text(encoding="utf-8-sig"))
     except FileNotFoundError:
-        raise InputFormatError(f"file not found: {path}. Check the path.") from None
+        raise InputFormatError.coded("err.file_not_found", path=path) from None
     except UnicodeDecodeError:
-        raise InputFormatError(f"{path} is not valid UTF-8. Pass a UTF-8 JSON file.") from None
+        raise InputFormatError.coded("err.request_not_utf8", path=path) from None
     except OSError as exc:
-        raise InputFormatError(f"cannot read {path}: {exc.strerror or exc}. Pass a readable JSON file.") from None
+        raise InputFormatError.coded("err.cannot_read_request", path=path, reason=exc.strerror or exc) from None
     except json.JSONDecodeError as exc:
-        raise InputFormatError(f"{path} is not valid JSON: {exc.msg} (line {exc.lineno}).") from None
+        raise InputFormatError.coded("err.request_invalid_json", path=path, detail=exc.msg, lineno=exc.lineno) from None
     if isinstance(data, dict) and isinstance(data.get("request"), dict):
         data = data["request"]
     if not isinstance(data, dict):
-        raise InputFormatError(f"{path} must contain a JSON object (a request body).")
+        raise InputFormatError.coded("err.request_not_object", path=path)
     return data
 
 

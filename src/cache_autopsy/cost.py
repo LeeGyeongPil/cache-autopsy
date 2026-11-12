@@ -37,15 +37,15 @@ class Pricing:
         try:
             override = json.loads(Path(path).read_text(encoding="utf-8-sig"))
         except FileNotFoundError:
-            raise InputFormatError(f"pricing file not found: {path}. Pass an existing JSON file.") from None
+            raise InputFormatError.coded("err.pricing_not_found", path=path) from None
         except UnicodeDecodeError:
-            raise InputFormatError(f"pricing file {path} is not valid UTF-8. Pass a UTF-8 JSON file.") from None
+            raise InputFormatError.coded("err.pricing_not_utf8", path=path) from None
         except OSError as exc:
-            raise InputFormatError(f"cannot read pricing file {path}: {exc.strerror or exc}.") from None
+            raise InputFormatError.coded("err.pricing_cannot_read", path=path, reason=exc.strerror or exc) from None
         except json.JSONDecodeError as exc:
-            raise InputFormatError(f"pricing file {path} is not valid JSON: {exc}") from None
+            raise InputFormatError.coded("err.pricing_invalid_json", path=path, detail=exc) from None
         if not isinstance(override, dict):
-            raise InputFormatError(f"pricing file {path} must contain a JSON object like the bundled pricing.json.")
+            raise InputFormatError.coded("err.pricing_not_object", path=path)
         base = cls.default().table
         merged = {**base, "_meta": {**base.get("_meta", {}), **override.get("_meta", {})}}
         for family in ("anthropic", "openai"):
@@ -65,7 +65,7 @@ class Pricing:
             mult = self.table.get("_meta", {}).get("openai_cache_write_multiplier", 1.25)
             return Rates(e["input"], e["input"] * mult, e["input"] * mult, e["cached_input"])
         except KeyError as exc:
-            raise InputFormatError(f"pricing entry for {model!r} lacks field {exc}.") from None
+            raise InputFormatError.coded("err.pricing_missing_field", model=model, field=exc) from None
 
 
 def hit_rate(usages: list[Usage]) -> float | None:

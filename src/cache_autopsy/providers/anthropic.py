@@ -20,7 +20,7 @@ def settings(req: dict) -> list[tuple[str, str, str, Any]]:
 def _int(usage: dict, key: str) -> int:
     value = usage.get(key) or 0
     if not isinstance(value, int) or isinstance(value, bool) or value < 0:
-        raise InputFormatError(f"usage.{key} must be a non-negative integer, got {value!r}")
+        raise InputFormatError.coded("err.usage_int_anthropic", key=key, value=value)
     return value
 
 
@@ -29,7 +29,7 @@ def usage(req: dict, resp: dict) -> Usage | None:
     if u is None:
         return None
     if not isinstance(u, dict):
-        raise InputFormatError("response.usage must be an object")
+        raise InputFormatError.coded("err.usage_not_object")
     # input_tokens only counts tokens AFTER the last cache marker, so the real total is the sum.
     read = _int(u, "cache_read_input_tokens")
     write = _int(u, "cache_creation_input_tokens")

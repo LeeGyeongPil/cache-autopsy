@@ -96,17 +96,17 @@ def analyze_records(records: Iterable[dict], pricing: Pricing | None = None, ses
     sessions: dict[str, list[dict]] = {}
     for n, rec in enumerate(records, 1):
         if not isinstance(rec, dict):
-            raise InputFormatError("each record must be a dict with a \"request\" object", n)
+            raise InputFormatError.coded("err.record_not_dict", n)
         line = rec.get("_line", n)
         if not isinstance(rec.get("request"), dict):
-            raise InputFormatError('each record needs a "request" object', line)
+            raise InputFormatError.coded("err.record_needs_request", line)
         try:
             spec = detect(rec["request"], rec.get("response"), hint=provider)
             rec["_spec"] = spec
             rec["_usage"] = spec.usage(rec["request"], rec.get("response") or {})
             rec["_ts"] = parse_ts(rec.get("ts"))
         except CacheAutopsyError as exc:  # keep the line number so the user can find the bad record
-            raise InputFormatError(str(exc), line) from None
+            raise InputFormatError(exc.message, line, exc.code, exc.params) from None
         key = dotted(rec, session_key) if session_key else rec.get("session_id")
         sessions.setdefault(str(key) if key is not None else "default", []).append(rec)
 

@@ -121,7 +121,7 @@ def diff_requests(a: dict, b: dict, provider: str | None = None, context: int = 
     """
     for label, req in (("first", a), ("second", b)):
         if not isinstance(req, dict):
-            raise InputFormatError(f"the {label} request must be a JSON object, got {type(req).__name__}")
+            raise InputFormatError.coded(f"err.{label}_not_object", type=type(req).__name__)
     spec = detect(b, hint=provider)
     struct, section = _structural(spec, a, b, context)
     setting = _setting_divergence(spec, a, b, context)

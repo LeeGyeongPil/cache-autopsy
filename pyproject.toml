@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "cache-autopsy"
-version = "0.1.1"
+version = "0.2.0"
 description = "Find out why your LLM prompt cache missed: offline diff, usage-aware hit rate, missed cost and CI gates for Anthropic and OpenAI request logs."
 readme = "README.md"
 license = { text = "MIT" }

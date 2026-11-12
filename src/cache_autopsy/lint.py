@@ -4,6 +4,7 @@ from __future__ import annotations
 import re
 from typing import Any
 
+from .i18n import translate
 from .model import Finding
 from .providers import detect
 from .render import estimate_tokens, render_sections
@@ -23,6 +24,11 @@ def _strings(node: Any, path: str):
     elif isinstance(node, list):
         for i, child in enumerate(node):
             yield from _strings(child, f"{path}[{i}]")
+
+
+def _finding(code: str, severity: str, where: str, msg_key: str, **params: Any) -> Finding:
+    """Finding with an English message (public API) plus the key/params the CLI translates."""
+    return Finding(code, severity, where, translate("en", msg_key, **params), CAUSES[code][2], msg_key, params)
 
 
 _ORDER = {"tools": 0, "system": 1, "messages": 2}
@@ -54,37 +60,28 @@ def lint_request(req: dict, provider: str | None = None, min_tokens: int = 1024)
                     volatile.append((path, codes))
     for path, codes in volatile:
         for code in codes:
-            findings.append(Finding(code, "warning", path,
-                                    f"a value that changes between calls sits in the cached prefix ({path}).",
-                                    CAUSES[code][2]))
+            findings.append(_finding(code, "warning", path, "lint.volatile", path=path))
 
     markers = spec.breakpoints(req)
     if spec.name == "anthropic":
         if not markers:
-            findings.append(Finding("no_cache_marker", "info", "", "no cache_control marker found; nothing will be cached.",
-                                    CAUSES["no_cache_marker"][2]))
+            findings.append(_finding("no_cache_marker", "info", "", "lint.no_marker"))
         explicit = [m for m in markers if m != "cache_control"]
         if len(markers) > MAX_BREAKPOINTS:
-            findings.append(Finding("too_many_breakpoints", "error", markers[MAX_BREAKPOINTS],
-                                    f"{len(markers)} cache markers found; the limit is {MAX_BREAKPOINTS}.",
-                                    CAUSES["too_many_breakpoints"][2]))
+            findings.append(_finding("too_many_breakpoints", "error", markers[MAX_BREAKPOINTS], "lint.too_many",
+                                     count=len(markers), limit=MAX_BREAKPOINTS))
         for m in explicit:
             # a marker caches everything before it: any changing value at or before it breaks the key
             culprit = next((path for path, _ in volatile if _position(path) <= _position(m)), None)
             if culprit:
-                findings.append(Finding("breakpoint_on_volatile_block", "warning", m,
-                                        f"{m} is cached, but the prefix up to it contains a changing value "
-                                        f"({culprit}), so the cache key never repeats.",
-                                        CAUSES["breakpoint_on_volatile_block"][2]))
+                findings.append(_finding("breakpoint_on_volatile_block", "warning", m, "lint.breakpoint_volatile",
+                                         marker=m, culprit=culprit))
 
     text, _, _ = render_sections(spec.sections(req))
     if markers or spec.name != "anthropic":
         est = estimate_tokens(text)
         if est < min_tokens:
-            findings.append(Finding("below_min_tokens", "info", "",
-                                    f"estimated ~{est} tokens (characters/4) is below {min_tokens}; "
-                                    "providers skip caching under their per-model minimum.",
-                                    CAUSES["below_min_tokens"][2]))
+            findings.append(_finding("below_min_tokens", "info", "", "lint.below_min", est=est, minimum=min_tokens))
     return findings
 
 
