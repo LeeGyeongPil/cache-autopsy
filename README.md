@@ -32,7 +32,7 @@ uv sync
 uv run cache-autopsy --version
 ```
 ```text
-cache-autopsy 0.1.1
+cache-autopsy 0.2.0
 ```
 On a minimal Linux container you need `git`, `curl` and `ca-certificates`. It has not been published to PyPI yet.
 
@@ -41,7 +41,7 @@ On a minimal Linux container you need `git`, `curl` and `ca-certificates`. It ha
 uv run cache-autopsy demo
 ```
 ```text
-NOTE: practice mock data (연습용 목(mock) 데이터). These are NOT real API logs; usage numbers are invented to follow the providers' rules.
+NOTE: practice mock data. These are NOT real API logs; usage numbers are invented to follow the providers' rules.
 The analyzer really renders, diffs and classifies the fake requests below.
 
 session  calls  hit rate  missed tokens  missed cost
@@ -58,6 +58,8 @@ Why 'broken' misses (cause: calls, missed tokens):
 
 Try: cache-autopsy analyze <your-log>.jsonl   |   cache-autopsy causes
 ```
+The output language follows `--lang` / `CACHE_AUTOPSY_LANG` / your locale (`LANG`). If your shell locale is Korean, the same command prints Korean; add `--lang en` to match the block above (see [Configuration](#configuration)).
+
 - **hit rate**: the share of input tokens that were read from the cache.
 - **missed tokens / cost**: the tokens that would have been read cheaply from the cache had it hit, and the price difference (based on example prices).
 - The lines below are totals "by cause of the break". The numbers are practice mock data, so they are not values from a real service.
@@ -87,7 +89,7 @@ Anthropic's `input_tokens` counts only the tokens **after** the last cache break
 | `lint REQUEST.json` | Patterns in a single request that are likely to break the cache | 1 if there are warnings |
 | `causes` | A list of cause codes and how to fix them (`--format md` is available) | 0 |
 
-Main options: `--format text|json|md`, `--fail-under 0.6` (lower bound on hit rate; a **ratio from 0 to 1**, and writing it like 60 exits with 2), `--fail-on CODE,...` (fail if that verdict or cause is present; unknown values exit with 2), `--session-key request.metadata.user_id` (the basis for grouping a conversation), `--pricing FILE` (override prices), `--redact` (do not print request text), `--provider` (specify instead of auto-detecting), `--min-tokens` (minimum tokens for caching, default 1024).
+Main options: `--format text|json|md` (`analyze` and `diff` accept all three; `causes` accepts `md`; `lint` prints text only and does not take `--format`), `--fail-under 0.6` (lower bound on hit rate; a **ratio from 0 to 1**, and writing it like 60 exits with 2), `--fail-on CODE,...` (fail if that verdict or cause is present; unknown values exit with 2), `--session-key request.metadata.user_id` (the basis for grouping a conversation), `--pricing FILE` (override prices), `--redact` (do not print request text), `--provider` (specify instead of auto-detecting), `--min-tokens` (minimum tokens for caching, default 1024).
 
 ### Input format
 One JSON object per line (a UTF-8 BOM at the start of the file is allowed). Provide `request` (required), `response` (usually), `session_id`, and `ts` (ISO-8601 or epoch seconds). Supported: Anthropic Messages, OpenAI Chat Completions, OpenAI Responses.
@@ -291,7 +293,8 @@ error: --fail-under must be a ratio between 0 and 1 (got 60.0). Write 0.6 for 60
 ```
 
 ## Configuration
-- There are no environment variables, keys or network (no `.env` needed).
+- There are no keys or network (no `.env` needed).
+- **Language**: human-readable output (help, tables, Markdown reports, errors, lint findings) comes in English or Korean. Pick it with `--lang en|ko` (before or after the subcommand) or the `CACHE_AUTOPSY_LANG` environment variable; otherwise `LC_ALL`, `LC_MESSAGES` and `LANG` are read in that order, and a value starting with `ko` means Korean. Anything else is English, including an unrecognized `CACHE_AUTOPSY_LANG` value (it does not fall through to the locale variables). Known limit: argparse's own built-in text (`usage:`, `positional arguments:`, `options:`, `-h, --help` and its usage errors such as `the following arguments are required`) stays English; only the tool's own help texts and messages are translated. For example `cache-autopsy --lang ko analyze log.jsonl` or `CACHE_AUTOPSY_LANG=ko cache-autopsy demo`. `--format json` output, cause codes, verdict values, `WARNING`/`ERROR`/`INFO` and exit codes are the same in both languages, so scripts and CI greps keep working.
 - **Prices**: `src/cache_autopsy/pricing.json` holds example prices per model (USD / 1M tokens). The file metadata (`_meta`) states `unverified_example_prices: true` (unverified example prices), `carried_over: 2026-11-09` (the values were carried over on that date) and the sources ([Anthropic](https://platform.claude.com/docs/en/about-claude/pricing), [OpenAI](https://developers.openai.com/api/docs/pricing)), but **these values could not be re-checked against the official price pages during development.** So treat them as "example prices", and to match real bills override them with `--pricing my-prices.json` (same shape). For unknown models it does not compute a cost and reports them as `unpriced_models`.
 - If a response has no `usage`, tokens are estimated as character count / 4, and the result marks that it is an estimate.
 - Byte positions and JSON paths are the result of re-rendering locally following the section order described in the docs, and there is no guarantee they match the provider's internal serialization.
@@ -358,7 +361,7 @@ uv run pytest -q
 uv run python -I -m unittest discover -s tests
 ```
 ```text
-41 passed in 0.29s
+81 passed in 2.45s
 ```
 Please leave bugs and suggestions as issues. The change log is [CHANGELOG.md](CHANGELOG.md).
 

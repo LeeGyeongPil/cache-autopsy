@@ -5,13 +5,13 @@
 프롬프트 캐시가 왜 깨졌는지, 이미 쌓아 둔 요청·응답 기록만으로 알려 주는 오프라인 CLI입니다. 공급자 콘솔을 뒤지거나 두 요청 본문을 눈으로 비교하는 수고를 줄여 줍니다.
 
 ```text
-session  calls  hit rate  missed tokens  missed cost
+세션      호출    적중률      놓친 토큰    놓친 비용
 broken       8     12.1%         21,110      $0.0728
 fixed        8     87.2%              0      $0.0000
 ```
-*`cache-autopsy demo` 의 실제 출력. 같은 대화를 고치기 전(broken)과 후(fixed)로 비교한 연습용 목(mock) 데이터입니다.*
+*한국어 로케일(`--lang ko`)에서 `cache-autopsy demo` 의 실제 출력. 같은 대화를 고치기 전(broken)과 후(fixed)로 비교한 연습용 목(mock) 데이터입니다.*
 
-![demo 명령 실행 화면](docs/images/01-demo.png)
+![demo 명령 실행 화면](docs/images/01-demo.ko.png)
 *그림 1. `cache-autopsy demo` 실행 화면.*
 
 > 아래 모든 출력은 실제로 실행해 복사한 것입니다.
@@ -32,7 +32,7 @@ uv sync
 uv run cache-autopsy --version
 ```
 ```text
-cache-autopsy 0.1.1
+cache-autopsy 0.2.0
 ```
 최소 리눅스 컨테이너라면 `git`, `curl`, `ca-certificates` 가 필요합니다. PyPI 에는 아직 게시하지 않았습니다.
 
@@ -41,25 +41,27 @@ cache-autopsy 0.1.1
 uv run cache-autopsy demo
 ```
 ```text
-NOTE: practice mock data (연습용 목(mock) 데이터). These are NOT real API logs; usage numbers are invented to follow the providers' rules.
-The analyzer really renders, diffs and classifies the fake requests below.
+안내: 연습용 목(mock) 데이터입니다. 실제 API 로그가 아니며 usage 숫자는 공급자 규칙에 맞춰 지어낸 값입니다.
+분석기는 아래 가짜 요청을 실제로 렌더링·비교·분류합니다.
 
-session  calls  hit rate  missed tokens  missed cost
+세션      호출    적중률      놓친 토큰    놓친 비용
 broken       8     12.1%         21,110      $0.0728
 fixed        8     87.2%              0      $0.0000
 
-Why 'broken' misses (cause: calls, missed tokens):
-  ttl_expired_suspected      1 call(s)  3,560 tokens  $0.0123
-  provider_side_suspected    1 call(s)  3,560 tokens  $0.0123
-  setting_changed:tool_choice 1 call(s)  3,560 tokens  $0.0123
-  json_key_order_changed     1 call(s)  3,520 tokens  $0.0121
-  timestamp_in_prefix        1 call(s)  3,470 tokens  $0.0120
-  tool_order_changed         1 call(s)  3,440 tokens  $0.0119
+'broken' 이 빗나가는 이유 (원인: 호출 수, 놓친 토큰):
+  ttl_expired_suspected      1건  3,560 토큰  $0.0123
+  provider_side_suspected    1건  3,560 토큰  $0.0123
+  setting_changed:tool_choice 1건  3,560 토큰  $0.0123
+  json_key_order_changed     1건  3,520 토큰  $0.0121
+  timestamp_in_prefix        1건  3,470 토큰  $0.0120
+  tool_order_changed         1건  3,440 토큰  $0.0119
 
-Try: cache-autopsy analyze <your-log>.jsonl   |   cache-autopsy causes
+다음: cache-autopsy analyze <내-로그>.jsonl   |   cache-autopsy causes
 ```
-- **hit rate**: 입력 토큰 중 캐시에서 읽은 비율입니다.
-- **missed tokens / cost**: 캐시가 맞았다면 싸게 읽었을 토큰과, 그 차액(예시 단가 기준)입니다.
+출력 언어는 `--lang` / `CACHE_AUTOPSY_LANG` / 로케일(`LANG`)을 따릅니다. 셸 로케일이 한국어가 아니면 같은 명령이 영어로 나오니, 위 블록과 똑같이 보려면 `--lang ko` 를 붙이세요([설정](#설정) 참고).
+
+- **적중률(hit rate)**: 입력 토큰 중 캐시에서 읽은 비율입니다.
+- **놓친 토큰·비용(missed tokens / cost)**: 캐시가 맞았다면 싸게 읽었을 토큰과, 그 차액(예시 단가 기준)입니다.
 - 아래 줄은 "깨진 원인별" 합계입니다. 숫자는 연습용 목 데이터라서 실제 서비스 값이 아닙니다.
 
 ### 연습용 목(mock) 모드란
@@ -87,7 +89,7 @@ Anthropic 의 `input_tokens` 는 마지막 캐시 지점 **뒤** 토큰만 세�
 | `lint REQUEST.json` | 요청 하나에서 캐시를 깰 만한 패턴 | 경고 있으면 1 |
 | `causes` | 원인 코드와 고치는 법 목록 (`--format md` 가능) | 0 |
 
-주요 옵션: `--format text|json|md`, `--fail-under 0.6`(적중률 하한, **0~1 비율**이며 60 처럼 쓰면 종료 2), `--fail-on CODE,...`(해당 판정·원인이 있으면 실패, 모르는 값은 종료 2), `--session-key request.metadata.user_id`(대화 묶음 기준), `--pricing FILE`(단가 덮어쓰기), `--redact`(요청 텍스트를 출력하지 않음), `--provider`(자동 감지 대신 지정), `--min-tokens`(캐시 최소 토큰 수, 기본 1024).
+주요 옵션: `--format text|json|md`(`analyze`·`diff` 는 셋 다, `causes` 는 `md`, `lint` 는 텍스트만 출력하며 `--format` 을 받지 않음), `--fail-under 0.6`(적중률 하한, **0~1 비율**이며 60 처럼 쓰면 종료 2), `--fail-on CODE,...`(해당 판정·원인이 있으면 실패, 모르는 값은 종료 2), `--session-key request.metadata.user_id`(대화 묶음 기준), `--pricing FILE`(단가 덮어쓰기), `--redact`(요청 텍스트를 출력하지 않음), `--provider`(자동 감지 대신 지정), `--min-tokens`(캐시 최소 토큰 수, 기본 1024).
 
 ### 입력 형식
 한 줄에 JSON 객체 하나(파일 앞의 UTF-8 BOM 은 허용). `request`(필수), `response`(보통), `session_id`, `ts`(ISO-8601 또는 epoch 초)를 둡니다. 지원: Anthropic Messages, OpenAI Chat Completions, OpenAI Responses.
@@ -125,50 +127,67 @@ append_record("recorded.jsonl", "chat-1", kwargs, resp)
 uv run cache-autopsy analyze recorded.jsonl --fail-under 0.6 --format md
 ```
 ```text
-FAIL: hit rate 0.00 < 0.60
-## cache-autopsy report
+FAIL: 적중률 0.00 < 0.60
+## cache-autopsy 보고서
 
-**Hit rate 0.0%** · missed 3,410 tokens · missed cost $0.0118
+**적중률 0.0%** · 놓친 토큰 3,410개 · 놓친 비용 $0.0118
 
-| session | # | verdict | reason / causes | path | byte | missed tokens | missed cost |
+| 세션 | # | 판정 | 이유 / 원인 | 경로 | byte | 놓친 토큰 | 놓친 비용 |
 |---|---|---|---|---|---|---|---|
 | s1 | 1 | unexplained_miss | unexplained/provider_side_suspected | messages[1] | 67 | 3,410 | $0.0118 |
 
-| cause | calls | missed tokens | missed cost |
+| 원인 | 호출 | 놓친 토큰 | 놓친 비용 |
 |---|---|---|---|
 | provider_side_suspected | 1 | 3,410 | $0.0118 |
 ```
 종료 코드 1. 두 번째 호출의 `usage` 를 캐시 읽기 0 으로 둔 가짜 값이라 미스로 나옵니다.
+
+이 문서의 예시 출력은 모두 한국어 로케일(`--lang ko` 또는 `LANG=ko_KR.UTF-8`)에서 얻은 것입니다. 영어 출력은 `README.md` 를 보세요.
 
 ### 시나리오 1 — 지난 기록에서 깨진 원인 찾기
 ```bash
 uv run cache-autopsy analyze src/cache_autopsy/samples/anthropic_broken.jsonl --fail-under 0.6
 ```
 ```text
-FAIL: hit rate 0.12 < 0.60
-cache-autopsy: 8 calls, 1 session(s), 7 comparisons
+FAIL: 적중률 0.12 < 0.60
+cache-autopsy: 호출 8건, 세션 1개, 비교 7건
 
-session broken: 8 calls, hit rate 12.1%, missed 21,110 tokens, $0.0728
-   #  verdict          reason / causes                                  path                         byte  missed tok missed usd
+세션 broken: 호출 8건, 적중률 12.1%, 놓친 토큰 21,110개, $0.0728
+   #  판정             이유 / 원인                                      경로                         byte   놓친 토큰   놓친 USD
    1  hit              messages_changed/append_only_ok                  messages[1]                 13588           0    $0.0000
    2  explained_miss   tools_changed/tool_order_changed                 tools[0].name                  29       3,440    $0.0119
-      fix: Sort tools (for example by name) before sending, or register them in a fixed order.
-      old: ...search_orders","description":"Search ord
-      new: ...get_stock","description":"Get stock leve
+      해결: 보내기 전에 도구를 정렬(예: 이름순)하거나 고정된 순서로 등록하세요.
+      이전: ...search_orders","description":"Search ord
+      이후: ...get_stock","description":"Get stock leve
    3  explained_miss   system_changed/timestamp_in_prefix               system                        355       3,470    $0.0120
-      fix: Move the clock value to the end (last user message) or drop it.
-      old: ...You are a support assistant for a fictio
-      new: ...Current time: 2026-11-09T10:05:31Z\nYou 
+      해결: 시계 값을 맨 뒤(마지막 사용자 메시지)로 옮기거나 없애세요.
+      이전: ...You are a support assistant for a fictio
+      이후: ...Current time: 2026-11-09T10:05:31Z\nYou 
    4  explained_miss   tools_changed/json_key_order_changed             tools[0].input_schema.required    103       3,520    $0.0121
-   ...
+      해결: 키 순서가 결정적인 직렬화를 쓰세요(sort_keys=True 또는 고정된 스키마 빌더 하나).
+      이전: ...type":"object","properties":{"book_id":{
+      이후: ...required":["book_id"],"properties":{"boo
    5  unexplained_miss unexplained/ttl_expired_suspected                -                               -       3,560    $0.0123
-      note: structure is identical, so this is a suspicion, not a finding (gap 420s).
+      해결: TTL 안에 다시 호출하거나 1시간 TTL 을 쓰거나, 다시 쓰이는 것을 받아들이세요.
+      참고: 구조가 같아서 확정이 아니라 추정입니다 (간격 420초).
    6  unexplained_miss unexplained/provider_side_suspected              -                               -       3,560    $0.0123
-      note: structure is identical, so this is a suspicion, not a finding (gap 30s).
+      해결: 라우팅 힌트(prompt_cache_key, 요청 빈도), 동시 첫 호출, 공급자 상태를 확인하세요.
+      참고: 구조가 같아서 확정이 아니라 추정입니다 (간격 30초).
    7  explained_miss   messages_changed/setting_changed:tool_choice     tool_choice                     -       3,560    $0.0123
-...
+      해결: tool_choice, thinking 같은 설정을 대화 내내 일정하게 유지하세요.
+      이전: ...null
+      이후: ...{"type":"any"}
+
+적중률 12.1% | 놓친 토큰 21,110개 | 놓친 비용 $0.0728
+원인별:
+  ttl_expired_suspected          1건     3,560 토큰    $0.0123
+  provider_side_suspected        1건     3,560 토큰    $0.0123
+  setting_changed:tool_choice    1건     3,560 토큰    $0.0123
+  json_key_order_changed         1건     3,520 토큰    $0.0121
+  timestamp_in_prefix            1건     3,470 토큰    $0.0120
+  tool_order_changed             1건     3,440 토큰    $0.0119
 ```
-명령의 종료 코드는 1 입니다(위 블록은 프로그램 출력만 담았고 종료 코드 줄은 포함하지 않습니다). (위 출력은 가독성을 위해 일부 줄을 `...` 로 줄였습니다. 전체는 직접 실행해 보세요.)
+명령의 종료 코드는 1 입니다(위 블록은 프로그램 출력만 담았고 종료 코드 줄은 포함하지 않습니다).
 
 읽는 법:
 1. 한 행은 "바로 앞 호출 → 이 호출"의 비교입니다. `hit` 는 앞부분이 그대로 이어졌다는 뜻입니다(새 메시지만 덧붙임).
@@ -176,7 +195,7 @@ session broken: 8 calls, hit rate 12.1%, missed 21,110 tokens, $0.0728
 3. `unexplained_miss` 는 구조는 같은데 캐시가 안 맞은 경우입니다. 호출 간격이 TTL(캐시 유지 시간)보다 길면 `ttl_expired_suspected`, 아니면 `provider_side_suspected` 로 **추측**만 하며 단정하지 않습니다.
 4. 종료 코드 1 은 `--fail-under` 게이트 실패입니다. CI 가 이 코드로 멈춥니다. (stderr 의 `FAIL:` 줄이 먼저 보이는 것은 출력 버퍼 순서 때문입니다.)
 
-![깨진 기록 분석 화면](docs/images/02-analyze-broken.png)
+![깨진 기록 분석 화면](docs/images/02-analyze-broken.ko.png)
 *그림 2. 깨진 기록 분석과 --fail-under 실패.*
 
 고친 뒤 같은 명령은 통과합니다.
@@ -184,13 +203,13 @@ session broken: 8 calls, hit rate 12.1%, missed 21,110 tokens, $0.0728
 uv run cache-autopsy analyze src/cache_autopsy/samples/anthropic_fixed.jsonl --fail-under 0.6
 ```
 ```text
-session fixed: 8 calls, hit rate 87.2%, missed 0 tokens, $0.0000
+세션 fixed: 호출 8건, 적중률 87.2%, 놓친 토큰 0개, $0.0000
 ...
-hit rate 87.2% | missed 0 tokens | missed cost $0.0000
+적중률 87.2% | 놓친 토큰 0개 | 놓친 비용 $0.0000
 ```
 종료 코드 0.
 
-![고친 기록 분석 화면](docs/images/05-analyze-fixed.png)
+![고친 기록 분석 화면](docs/images/05-analyze-fixed.ko.png)
 *그림 5. 고친 기록은 통과(종료 코드 0).*
 
 ### 시나리오 2 — 두 요청을 비교하기
@@ -198,17 +217,17 @@ hit rate 87.2% | missed 0 tokens | missed cost $0.0000
 uv run cache-autopsy diff src/cache_autopsy/samples/requests/tools_a.json src/cache_autopsy/samples/requests/tools_b.json
 ```
 ```text
-reason : tools_changed
-causes : tool_order_changed
-where  : path=tools[0].name byte=29  (local rendering, see README)
-before : ..."claude-sonnet-4-5"[{"name":"
-old    : search_orders","description":"Search ord
-new    : get_stock","description":"Get stock leve
-fix    : Sort tools (for example by name) before sending, or register them in a fixed order.
+이유   : tools_changed
+원인   : tool_order_changed
+위치   : path=tools[0].name byte=29  (로컬 렌더링 기준, README 참고)
+앞     : ..."claude-sonnet-4-5"[{"name":"
+이전   : search_orders","description":"Search ord
+이후   : get_stock","description":"Get stock leve
+해결   : 보내기 전에 도구를 정렬(예: 이름순)하거나 고정된 순서로 등록하세요.
 ```
 도구 목록이 같은데 순서만 바뀌었습니다. 캐시는 도구 → 시스템 → 메시지 순으로 앞에서부터 이어 붙인 접두부(prefix)를 쓰므로, 맨 앞의 도구가 달라지면 뒤 전부가 무효가 됩니다.
 
-![두 요청 비교 화면](docs/images/03-diff.png)
+![두 요청 비교 화면](docs/images/03-diff.ko.png)
 *그림 3. 도구 순서 변경 비교.*
 
 ### 시나리오 3 — 보내기 전에 점검(lint)
@@ -217,16 +236,16 @@ uv run cache-autopsy lint src/cache_autopsy/samples/requests/volatile_system.jso
 ```
 ```text
 WARNING timestamp_in_prefix  path=system[0].text
-        a value that changes between calls sits in the cached prefix (system[0].text).
-        fix: Move the clock value to the end (last user message) or drop it.
+        호출마다 바뀌는 값이 캐시되는 앞부분에 있습니다 (system[0].text).
+        해결: 시계 값을 맨 뒤(마지막 사용자 메시지)로 옮기거나 없애세요.
 WARNING breakpoint_on_volatile_block  path=system[0]
-        system[0] is cached, but the prefix up to it contains a changing value (system[0].text), so the cache key never repeats.
-        fix: Place cache_control on the last stable block, before anything volatile.
-2 warning(s), 0 info
+        system[0] 까지 캐시되지만 그 앞부분에 바뀌는 값(system[0].text)이 있어 캐시 키가 반복되지 않습니다.
+        해결: cache_control 을 바뀌는 것보다 앞의, 마지막으로 안정적인 블록에 두세요.
+경고 2건, 참고 0건
 ```
-경고가 있어 종료 코드는 1입니다. 문제없는 `requests/clean.json` 은 `no findings: ...` 와 종료 코드 0 입니다.
+경고가 있어 종료 코드는 1입니다. 문제없는 `requests/clean.json` 은 `발견 사항 없음: ...` 와 종료 코드 0 입니다.
 
-![lint 경고 화면](docs/images/04-lint.png)
+![lint 경고 화면](docs/images/04-lint.ko.png)
 *그림 4. 시간값이 접두부에 있다는 경고.*
 
 ### 시나리오 4 — 파이썬에서 부르기
@@ -280,18 +299,19 @@ repos:
 uv run cache-autopsy analyze nope.jsonl
 ```
 ```text
-error: file not found: nope.jsonl. Check the path.
+오류: 파일을 찾을 수 없습니다: nope.jsonl. 경로를 확인하세요.
 ```
 종료 코드 2. JSON 이 깨진 줄은 줄 번호와 함께 보고됩니다. UTF-8 이 아닌 파일, 디렉터리, 잘못된 `--fail-under`·`--fail-on` 값도 traceback 없이 고칠 방법과 함께 종료 코드 2 로 끝납니다.
 ```bash
 uv run cache-autopsy analyze x.jsonl --fail-under 60
 ```
 ```text
-error: --fail-under must be a ratio between 0 and 1 (got 60.0). Write 0.6 for 60%.
+오류: --fail-under 는 0 과 1 사이의 비율이어야 합니다(받은 값: 60.0). 60% 는 0.6 으로 쓰세요.
 ```
 
 ## 설정
-- 환경변수·키·네트워크가 없습니다(`.env` 불필요).
+- 키·네트워크가 없습니다(`.env` 불필요).
+- **언어**: 사람이 읽는 출력(도움말, 표, Markdown 보고서, 오류, lint 결과)을 영어·한국어로 볼 수 있습니다. `--lang en|ko`(하위 명령 앞이나 뒤 어디든) 또는 환경변수 `CACHE_AUTOPSY_LANG` 로 고르고, 없으면 `LC_ALL`, `LC_MESSAGES`, `LANG` 순으로 읽어 `ko` 로 시작하면 한국어, 그 밖은 영어입니다. 알 수 없는 `CACHE_AUTOPSY_LANG` 값도 영어로 처리되며 로케일 변수로 넘어가지 않습니다. 알려진 한계: argparse 자체 문구(`usage:`, `positional arguments:`, `options:`, `-h, --help` 와 `the following arguments are required` 같은 사용법 오류)는 영어로 남고, 이 도구가 쓴 도움말·메시지만 번역됩니다. 예: `cache-autopsy --lang ko analyze log.jsonl`, `CACHE_AUTOPSY_LANG=ko cache-autopsy demo`. `--format json` 출력, 원인 코드, 판정 값, `WARNING`/`ERROR`/`INFO`, 종료 코드는 두 언어에서 같아서 스크립트와 CI grep 은 그대로 동작합니다.
 - **단가**: `src/cache_autopsy/pricing.json` 에 모델별 예시 단가(USD / 1M 토큰)가 들어 있습니다. 파일 메타(`_meta`)에 `unverified_example_prices: true`(검증되지 않은 예시 단가), `carried_over: 2026-11-09`(이 날짜의 값을 옮겨 둠)와 출처([Anthropic](https://platform.claude.com/docs/en/about-claude/pricing), [OpenAI](https://developers.openai.com/api/docs/pricing))가 적혀 있지만, **이 값들은 개발 중 공식 가격 페이지와 다시 대조하지 못했습니다.** 그러니 "예시 단가"로 보고, 실제 청구와 맞춰 보려면 `--pricing my-prices.json`(같은 모양)으로 덮어쓰세요. 모르는 모델은 비용을 계산하지 않고 `unpriced_models` 로 알립니다.
 - 응답에 `usage` 가 없으면 글자 수/4 로 토큰을 추정하고 결과에 추정임을 표시합니다.
 - 바이트 위치와 JSON 경로는 문서에 적힌 섹션 순서를 따라 로컬에서 다시 그린 결과이며, 공급자 내부 직렬화와 같다는 보장은 없습니다.
@@ -326,7 +346,7 @@ flowchart LR
 | CI 게이트 | 예 | 아니오 | 직접 구현 | 직접 구현 |
 | 실제 청구액 | 단가 추정 | 정확함 | 아님 | 아님 |
 
-**공식 진단과의 관계**: Anthropic 의 [cache diagnostics](https://platform.claude.com/docs/en/build-with-claude/cache-diagnostics), OpenAI 의 [prompt cache diagnostics](https://developers.openai.com/api/docs/guides/prompt-caching/diagnostics)를 대체하려는 것이 아니라, 이미 저장된 기록을 오프라인으로 분석하는 보완입니다. 기록 응답에 진단 필드가 들어 있으면 리포트에 `provider says: ... (agree=True|False)` 줄로 같이 보여 주어, 로컬 추정과 공급자 설명을 교차 확인할 수 있습니다.
+**공식 진단과의 관계**: Anthropic 의 [cache diagnostics](https://platform.claude.com/docs/en/build-with-claude/cache-diagnostics), OpenAI 의 [prompt cache diagnostics](https://developers.openai.com/api/docs/guides/prompt-caching/diagnostics)를 대체하려는 것이 아니라, 이미 저장된 기록을 오프라인으로 분석하는 보완입니다. 기록 응답에 진단 필드가 들어 있으면 리포트에 `공급자 진단: ... (일치=True|False)` 줄로 같이 보여 주어, 로컬 추정과 공급자 설명을 교차 확인할 수 있습니다.
 
 **같은 주제의 다른 오픈소스 도구**: 캐시 적중 로그를 보는 작은 도구들이 있습니다(예: [prefixcash](https://pypi.org/project/prefixcash/), [cachelens](https://pypi.org/project/cachelens/), [prompt-cache-doctor](https://github.com/Ankitajainkuniya/prompt-cache-doctor)). 개발 중 조사한 바로는 공급자 하나만 지원하거나 도구 순서·설정 필드 변화·JSON 경로·CI 종료 코드까지는 다루지 않는 경우가 있었습니다(2026-11-09 확인, 이후 바뀌었을 수 있습니다). 각자 용도에 맞는 것을 고르세요.
 
@@ -335,9 +355,9 @@ flowchart LR
 ## 자주 겪는 문제
 | 증상 | 원인 | 해결 |
 |---|---|---|
-| `error: ... each record must be an object with a "request"` | 줄마다 `request` 키가 있어야 함 | 한 줄에 `{"request": {...}, "response": {...}}` 형태로 저장 |
-| `cannot apply --fail-under: the log has no usage data.` (종료 2) | 응답에 usage 가 없음 | 응답 전체(또는 usage)를 같이 기록 |
-| 구조는 같은데 `unexplained_miss` | TTL 만료, 첫 호출 동시 실행, 공급자 라우팅 등 | 출력의 `gap` 과 `fix` 를 보고 간격·`prompt_cache_key` 점검 |
+| `오류: ... 각 레코드는 "request" 객체를 가진 객체여야 합니다` | 줄마다 `request` 키가 있어야 함 | 한 줄에 `{"request": {...}, "response": {...}}` 형태로 저장 |
+| `--fail-under 를 적용할 수 없습니다: 로그에 usage 데이터가 없습니다.` (종료 2) | 응답에 usage 가 없음 | 응답 전체(또는 usage)를 같이 기록 |
+| 구조는 같은데 `unexplained_miss` | TTL 만료, 첫 호출 동시 실행, 공급자 라우팅 등 | 출력의 `간격` 과 `해결` 줄을 보고 간격·`prompt_cache_key` 점검 |
 | 비용이 `$0` 이거나 비어 있음 | 단가표에 없는 모델 | `--pricing` 으로 단가 추가 |
 | 적중률이 낮은데 원인이 없음 | 앞 프롬프트가 캐시 최소 토큰 수보다 짧음 | `--min-tokens` 를 모델에 맞게 조정 |
 
@@ -358,7 +378,7 @@ uv run pytest -q
 uv run python -I -m unittest discover -s tests
 ```
 ```text
-41 passed in 0.29s
+81 passed in 2.45s
 ```
 버그·제안은 이슈로 남겨 주세요. 변경 기록은 [CHANGELOG.md](CHANGELOG.md).
 
