@@ -32,7 +32,7 @@ uv sync
 uv run cache-autopsy --version
 ```
 ```text
-cache-autopsy 0.2.0
+cache-autopsy 0.2.1
 ```
 최소 리눅스 컨테이너라면 `git`, `curl`, `ca-certificates` 가 필요합니다. PyPI 에는 아직 게시하지 않았습니다.
 
@@ -89,7 +89,7 @@ Anthropic 의 `input_tokens` 는 마지막 캐시 지점 **뒤** 토큰만 세�
 | `lint REQUEST.json` | 요청 하나에서 캐시를 깰 만한 패턴 | 경고 있으면 1 |
 | `causes` | 원인 코드와 고치는 법 목록 (`--format md` 가능) | 0 |
 
-주요 옵션: `--format text|json|md`(`analyze`·`diff` 는 셋 다, `causes` 는 `md`, `lint` 는 텍스트만 출력하며 `--format` 을 받지 않음), `--fail-under 0.6`(적중률 하한, **0~1 비율**이며 60 처럼 쓰면 종료 2), `--fail-on CODE,...`(해당 판정·원인이 있으면 실패, 모르는 값은 종료 2), `--session-key request.metadata.user_id`(대화 묶음 기준), `--pricing FILE`(단가 덮어쓰기), `--redact`(요청 텍스트를 출력하지 않음), `--provider`(자동 감지 대신 지정), `--min-tokens`(캐시 최소 토큰 수, 기본 1024).
+주요 옵션: `--format text|json|md`(`analyze`·`diff` 는 셋 다, `causes` 는 `md`, `lint` 는 텍스트만 출력하며 `--format` 을 받지 않음), `--fail-under 0.6`(적중률 하한, **0~1 비율**이며 60 처럼 쓰면 종료 2), `--fail-on CODE,...`(해당 판정·원인이 있으면 실패, 모르는 값은 종료 2), `--session-key request.metadata.user_id`(대화 묶음 기준), `--pricing FILE`(단가 덮어쓰기), `--redact`(요청 텍스트를 출력하지 않음, `diff --format json` 도 `context_*` 키는 두고 값을 비움), `--provider`(자동 감지 대신 지정), `--min-tokens`(캐시 최소 토큰 수, 기본 1024).
 
 ### 입력 형식
 한 줄에 JSON 객체 하나(파일 앞의 UTF-8 BOM 은 허용). `request`(필수), `response`(보통), `session_id`, `ts`(ISO-8601 또는 epoch 초)를 둡니다. 지원: Anthropic Messages, OpenAI Chat Completions, OpenAI Responses.
@@ -378,7 +378,7 @@ uv run pytest -q
 uv run python -I -m unittest discover -s tests
 ```
 ```text
-81 passed in 2.45s
+82 passed in 2.45s
 ```
 버그·제안은 이슈로 남겨 주세요. 변경 기록은 [CHANGELOG.md](CHANGELOG.md).
 

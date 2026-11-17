@@ -32,7 +32,7 @@ uv sync
 uv run cache-autopsy --version
 ```
 ```text
-cache-autopsy 0.2.0
+cache-autopsy 0.2.1
 ```
 On a minimal Linux container you need `git`, `curl` and `ca-certificates`. It has not been published to PyPI yet.
 
@@ -89,7 +89,7 @@ Anthropic's `input_tokens` counts only the tokens **after** the last cache break
 | `lint REQUEST.json` | Patterns in a single request that are likely to break the cache | 1 if there are warnings |
 | `causes` | A list of cause codes and how to fix them (`--format md` is available) | 0 |
 
-Main options: `--format text|json|md` (`analyze` and `diff` accept all three; `causes` accepts `md`; `lint` prints text only and does not take `--format`), `--fail-under 0.6` (lower bound on hit rate; a **ratio from 0 to 1**, and writing it like 60 exits with 2), `--fail-on CODE,...` (fail if that verdict or cause is present; unknown values exit with 2), `--session-key request.metadata.user_id` (the basis for grouping a conversation), `--pricing FILE` (override prices), `--redact` (do not print request text), `--provider` (specify instead of auto-detecting), `--min-tokens` (minimum tokens for caching, default 1024).
+Main options: `--format text|json|md` (`analyze` and `diff` accept all three; `causes` accepts `md`; `lint` prints text only and does not take `--format`), `--fail-under 0.6` (lower bound on hit rate; a **ratio from 0 to 1**, and writing it like 60 exits with 2), `--fail-on CODE,...` (fail if that verdict or cause is present; unknown values exit with 2), `--session-key request.metadata.user_id` (the basis for grouping a conversation), `--pricing FILE` (override prices), `--redact` (do not print request text; `diff --format json` keeps the `context_*` keys but leaves them empty), `--provider` (specify instead of auto-detecting), `--min-tokens` (minimum tokens for caching, default 1024).
 
 ### Input format
 One JSON object per line (a UTF-8 BOM at the start of the file is allowed). Provide `request` (required), `response` (usually), `session_id`, and `ts` (ISO-8601 or epoch seconds). Supported: Anthropic Messages, OpenAI Chat Completions, OpenAI Responses.
@@ -361,7 +361,7 @@ uv run pytest -q
 uv run python -I -m unittest discover -s tests
 ```
 ```text
-81 passed in 2.45s
+82 passed in 2.45s
 ```
 Please leave bugs and suggestions as issues. The change log is [CHANGELOG.md](CHANGELOG.md).
 

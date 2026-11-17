@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.1] - 2026-11-17
+
+### Fixed
+- `diff --redact --format json` printed request text in `context_before`, `context_after` and `context_prev_after`; they are now empty strings (keys kept) when `--redact` is set.
+
 ## [0.2.0] - 2026-11-12
 
 ### Added
