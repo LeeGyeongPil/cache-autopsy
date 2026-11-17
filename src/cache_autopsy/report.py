@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+import re
 
 from .model import Divergence, Finding, PairVerdict, Report
 from .i18n import ljust, rjust, t
@@ -39,6 +40,27 @@ def divergence_text(d: Divergence, redact: bool = False) -> str:
         lines.append(t("div.new", value=_esc(d.context_after)))
     lines.append(t("div.fix", value=display_fix(d.causes, d.reason)))
     return "\n".join(lines)
+
+
+def _cell(text: str) -> str:
+    return text.replace("|", "\\|").replace("\n", " ")
+
+
+def divergence_md(d: Divergence, redact: bool = False) -> str:
+    byte = "n/a" if d.byte_offset is None else str(d.byte_offset)
+    rows = [(t("md.div_reason"), d.reason), (t("md.div_causes"), ", ".join(d.causes) or "-"),
+            (t("md.div_path"), d.json_path or "-"), (t("md.div_byte"), byte),
+            (t("md.div_fix"), display_fix(d.causes, d.reason))]
+    out = [t("md.div_title"), "", t("md.div_head"), "|---|---|"]
+    out += [f"| {k} | {_cell(v)} |" for k, v in rows]
+    if not redact and (d.context_before or d.context_after or d.context_prev_after):
+        body = [t("div.before", value=_esc(d.context_before)), t("div.old", value=_esc(d.context_prev_after)),
+                t("div.new", value=_esc(d.context_after))]
+        # fence longer than any backtick run in the context so it cannot close early
+        longest = max((len(m) for m in re.findall(r"`+", "\n".join(body))), default=0)
+        fence = "`" * max(3, longest + 1)
+        out += ["", t("md.div_context"), "", fence, *body, fence]
+    return "\n".join(out)
 
 
 def analysis_text(report: Report, redact: bool = False) -> str:

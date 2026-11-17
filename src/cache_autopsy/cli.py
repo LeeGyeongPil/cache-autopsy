@@ -12,7 +12,7 @@ from .lint import has_problems, lint_request
 from .i18n import t
 from .model import CacheAutopsyError
 from .records import read_jsonl, read_request
-from .report import analysis_json, analysis_md, analysis_text, divergence_text, findings_text
+from .report import analysis_json, analysis_md, analysis_text, divergence_md, divergence_text, findings_text
 from .rules import CAUSES, causes_markdown
 from .verdict import DEFAULT_MIN_TOKENS, analyze_records
 
@@ -88,6 +88,8 @@ def _run(args) -> int:
         if args.format == "json":
             import json
             print(json.dumps(div.to_dict(args.redact), indent=2, ensure_ascii=False))
+        elif args.format == "md":
+            print(divergence_md(div, args.redact))
         else:
             print(divergence_text(div, args.redact))
         return 0

@@ -49,6 +49,27 @@ class CliTest(unittest.TestCase):
         for k in keys:
             self.assertEqual(redacted[k], "")
 
+    def test_diff_md(self):
+        a, b = str(SAMPLES / "requests/tools_a.json"), str(SAMPLES / "requests/tools_b.json")
+        for lang, title in (("en", "## cache-autopsy diff"), ("ko", "## cache-autopsy 비교")):
+            text = run("--lang", lang, "diff", a, b, "--format", "text")[1]
+            code, md, _ = run("--lang", lang, "diff", a, b, "--format", "md")
+            self.assertEqual(code, 0)
+            self.assertNotEqual(md, text)
+            self.assertIn(title, md)
+            self.assertIn("|---|---|", md)
+            self.assertIn("tool_order_changed", md)
+            self.assertIn("```", md)
+            labels = ("reason", "causes", "path", "byte", "fix") if lang == "en" else ("이유", "원인", "경로", "바이트", "해결")
+            for lab in labels:
+                self.assertIn(f"| {lab} |", md)
+            if lang == "ko":
+                for lab in ("reason", "causes", "path", "byte", "fix"):
+                    self.assertNotIn(f"| {lab} |", md)
+            red = run("--lang", lang, "diff", a, b, "--format", "md", "--redact")[1]
+            self.assertNotIn("```", red)
+            self.assertIn("tool_order_changed", red)
+
     def test_gate(self):  # AC-8
         code, _, err = run("analyze", BROKEN, "--fail-under", "0.6")
         self.assertEqual(code, 1)
@@ -133,3 +154,16 @@ class CliTest(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestDivergenceMdFence(unittest.TestCase):
+    def test_fence_longer_than_context_backticks(self):
+        from cache_autopsy.model import Divergence
+        from cache_autopsy.report import divergence_md
+        d = Divergence(reason="tools_changed", causes=["tool_order_changed"], json_path="tools[0]",
+                       byte_offset=3, context_before="a ``` b", context_after="x ```` y", context_prev_after="z")
+        out = divergence_md(d).splitlines()
+        fences = [l for l in out if l and set(l) == {"`"}]
+        self.assertEqual(len(fences), 2)
+        self.assertEqual(fences[0], fences[1])
+        self.assertGreaterEqual(len(fences[0]), 5)
