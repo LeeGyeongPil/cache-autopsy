@@ -89,9 +89,12 @@ class Divergence:
 
         return fix_for(self.causes, self.reason)
 
-    def to_dict(self) -> dict[str, Any]:
+    def to_dict(self, redact: bool = False) -> dict[str, Any]:
         d = asdict(self)
         d["fix"] = self.fix
+        if redact:
+            for key in ("context_before", "context_after", "context_prev_after"):
+                d[key] = ""
         return d
 
 

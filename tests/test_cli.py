@@ -40,6 +40,15 @@ class CliTest(unittest.TestCase):
         for text in ("tools_changed", "tool_order_changed", "tools[0]", "byte="):
             self.assertIn(text, out)
 
+    def test_diff_json_redact(self):
+        a, b = str(SAMPLES / "requests/tools_a.json"), str(SAMPLES / "requests/tools_b.json")
+        keys = ("context_before", "context_after", "context_prev_after")
+        plain = json.loads(run("diff", a, b, "--format", "json")[1])
+        self.assertTrue(any(plain[k] for k in keys))
+        redacted = json.loads(run("diff", a, b, "--redact", "--format", "json")[1])
+        for k in keys:
+            self.assertEqual(redacted[k], "")
+
     def test_gate(self):  # AC-8
         code, _, err = run("analyze", BROKEN, "--fail-under", "0.6")
         self.assertEqual(code, 1)

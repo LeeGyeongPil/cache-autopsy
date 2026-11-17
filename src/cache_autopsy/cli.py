@@ -87,7 +87,7 @@ def _run(args) -> int:
         div = diff_requests(read_request(args.a), read_request(args.b), _provider(args), args.context)
         if args.format == "json":
             import json
-            print(json.dumps(div.to_dict(), indent=2, ensure_ascii=False))
+            print(json.dumps(div.to_dict(args.redact), indent=2, ensure_ascii=False))
         else:
             print(divergence_text(div, args.redact))
         return 0
