@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented here. Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [0.2.2] - 2026-11-17
+
+### Fixed
+- `diff --format md` printed plain text; it now prints a Markdown table (and a fenced context block unless `--redact`). Row labels are translated for `--lang ko`, and the context fence grows when the request text itself contains backtick runs.
+
 ## [0.2.1] - 2026-11-17
 
 ### Fixed

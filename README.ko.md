@@ -32,7 +32,7 @@ uv sync
 uv run cache-autopsy --version
 ```
 ```text
-cache-autopsy 0.2.1
+cache-autopsy 0.2.2
 ```
 최소 리눅스 컨테이너라면 `git`, `curl`, `ca-certificates` 가 필요합니다. PyPI 에는 아직 게시하지 않았습니다.
 
@@ -378,7 +378,7 @@ uv run pytest -q
 uv run python -I -m unittest discover -s tests
 ```
 ```text
-82 passed in 2.45s
+84 passed in 0.33s
 ```
 버그·제안은 이슈로 남겨 주세요. 변경 기록은 [CHANGELOG.md](CHANGELOG.md).
 

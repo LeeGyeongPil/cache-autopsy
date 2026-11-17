@@ -32,7 +32,7 @@ uv sync
 uv run cache-autopsy --version
 ```
 ```text
-cache-autopsy 0.2.1
+cache-autopsy 0.2.2
 ```
 On a minimal Linux container you need `git`, `curl` and `ca-certificates`. It has not been published to PyPI yet.
 
@@ -361,7 +361,7 @@ uv run pytest -q
 uv run python -I -m unittest discover -s tests
 ```
 ```text
-82 passed in 2.45s
+84 passed in 0.33s
 ```
 Please leave bugs and suggestions as issues. The change log is [CHANGELOG.md](CHANGELOG.md).
 
